@@ -4,7 +4,7 @@
 
 [![C++20](https://img.shields.io/badge/C%2B%2B-20-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B20)
 [![Header-only](https://img.shields.io/badge/header--only-✓-green.svg)](https://github.com/starworks/arc)
-[![License](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-MPL2.0-yellow.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-windows%20|%20linux%20|%20macos-lightgrey.svg)](https://github.com/starworks/arc)
 
 **A modern C++20 header-only library providing high-performance runtime utilities with zero-overhead abstractions**
