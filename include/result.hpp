@@ -3,9 +3,10 @@
 #include <cassert>
 #include <cstddef>
 #include <new>
-#include <stdexcept>
 #include <type_traits>
 #include <utility>
+
+#include "platform.hpp"
 
 namespace arc
 {
@@ -29,12 +30,6 @@ namespace arc
 
     struct ok_tag {};
     inline constexpr ok_tag ok{};
-
-    class bad_result_access : public std::runtime_error
-    {
-    public:
-        explicit bad_result_access(const std::string& what) : std::runtime_error(what) {}
-    };
 
     template<typename T, typename E>
     class result
@@ -211,61 +206,6 @@ namespace arc
             return std::move(*err_ptr());
         }
 
-        [[nodiscard]] T& unwrap() &
-        {
-            if (!m_has_value)
-                throw bad_result_access("unwrap() called on result with error");
-            return *val_ptr();
-        }
-
-        [[nodiscard]] const T& unwrap() const&
-        {
-            if (!m_has_value)
-                throw bad_result_access("unwrap() called on result with error");
-            return *val_ptr();
-        }
-
-        [[nodiscard]] T&& unwrap() &&
-        {
-            if (!m_has_value)
-                throw bad_result_access("unwrap() called on result with error");
-            return std::move(*val_ptr());
-        }
-
-        [[nodiscard]] const T&& unwrap() const&&
-        {
-            if (!m_has_value)
-                throw bad_result_access("unwrap() called on result with error");
-            return std::move(*val_ptr());
-        }
-
-        [[nodiscard]] T& expect(const std::string& msg) &
-        {
-            if (!m_has_value)
-                throw bad_result_access(msg);
-            return *val_ptr();
-        }
-
-        [[nodiscard]] const T& expect(const std::string& msg) const&
-        {
-            if (!m_has_value)
-                throw bad_result_access(msg);
-            return *val_ptr();
-        }
-
-        [[nodiscard]] T&& expect(const std::string& msg) &&
-        {
-            if (!m_has_value)
-                throw bad_result_access(msg);
-            return std::move(*val_ptr());
-        }
-
-        [[nodiscard]] const T&& expect(const std::string& msg) const&&
-        {
-            if (!m_has_value)
-                throw bad_result_access(msg);
-            return std::move(*val_ptr());
-        }
 
         constexpr T& operator*() &
         {
@@ -358,27 +298,25 @@ namespace arc
 
         T* val_ptr() noexcept
         {
-            return std::launder(reinterpret_cast<T*>(&m_storage));
+            return m_storage.as<T>();
         }
 
         const T* val_ptr() const noexcept
         {
-            return std::launder(reinterpret_cast<const T*>(&m_storage));
+            return m_storage.as<T>();
         }
 
         E* err_ptr() noexcept
         {
-            return std::launder(reinterpret_cast<E*>(&m_storage));
+            return m_storage.as<E>();
         }
 
         const E* err_ptr() const noexcept
         {
-            return std::launder(reinterpret_cast<const E*>(&m_storage));
+            return m_storage.as<E>();
         }
 
-        static constexpr size_t storage_size = std::max(sizeof(T), sizeof(E));
-        static constexpr size_t storage_align = std::max(alignof(T), alignof(E));
-        alignas(storage_align) std::byte m_storage[storage_size];
+        variant_storage<T, E> m_storage;
         bool m_has_value;
     };
 
@@ -529,19 +467,19 @@ namespace arc
         template<typename... Args>
         constexpr void construct_error(Args&&... args)
         {
-            ::new (static_cast<void*>(&m_storage)) E(std::forward<Args>(args)...);
+            std::construct_at(err_ptr(), std::forward<Args>(args)...);
         }
 
         constexpr void destroy()
         {
-            err_ptr()->~E();
+            std::destroy_at(err_ptr());
         }
 
-        alignas(E) std::byte m_storage[sizeof(E)];
-        bool m_has_value;
+        E* err_ptr() noexcept { return m_storage.as<E>(); }
+        const E* err_ptr() const noexcept { return m_storage.as<E>(); }
 
-        E* err_ptr() noexcept { return std::launder(reinterpret_cast<E*>(&m_storage)); }
-        const E* err_ptr() const noexcept { return std::launder(reinterpret_cast<const E*>(&m_storage)); }
+        aligned_storage<sizeof(E), alignof(E)> m_storage;
+        bool m_has_value;
     };
 
     template<typename T>
