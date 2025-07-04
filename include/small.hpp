@@ -165,35 +165,9 @@ namespace arc
             return has_value();
         }
 
-        template<typename Visitor>
-        decltype(auto) visit(Visitor&& visitor)
-        {
-            ARC_ASSERT(has_value(), "small_buffer::visit() called on empty buffer");
-            return m_type_ops->visit(get_storage(), std::forward<Visitor>(visitor));
-        }
-
-        template<typename Visitor>
-        decltype(auto) visit(Visitor&& visitor) const
-        {
-            ARC_ASSERT(has_value(), "small_buffer::visit() called on empty buffer");
-            return m_type_ops->visit_const(get_storage(), std::forward<Visitor>(visitor));
-        }
-
-        template<typename Visitor>
-        auto try_visit(Visitor&& visitor) -> std::optional<decltype(visitor(std::declval<T&>()))>
-        {
-            if (!has_value())
-                return std::nullopt;
-            return m_type_ops->visit(get_storage(), std::forward<Visitor>(visitor));
-        }
-
-        template<typename Visitor>
-        auto try_visit(Visitor&& visitor) const -> std::optional<decltype(visitor(std::declval<const T&>()))>
-        {
-            if (!has_value())
-                return std::nullopt;
-            return m_type_ops->visit_const(get_storage(), std::forward<Visitor>(visitor));
-        }
+        // Visitor pattern removed due to type safety issues with type erasure
+        // The original implementation had a type confusion bug and proper
+        // implementation would require a redesign of the type erasure mechanism
 
         template<typename U>
         [[nodiscard]] U* get_if() noexcept
@@ -217,15 +191,6 @@ namespace arc
             void (*destroy)(void*) noexcept;
             void (*copy_construct)(void*, const void*);
             void (*move_construct)(void*, void*) noexcept;
-
-            template<typename Visitor>
-            using visit_fn = decltype(std::declval<Visitor>()(std::declval<T&>()))(*)(void*, Visitor&&);
-
-            template<typename Visitor>
-            using visit_const_fn = decltype(std::declval<Visitor>()(std::declval<const T&>()))(*)(const void*, Visitor&&);
-
-            void* (*visit)(void*, void*);
-            void* (*visit_const)(const void*, void*);
         };
 
         template<typename U>
@@ -245,20 +210,6 @@ namespace arc
             [](void* dst, void* src) noexcept
             {
                 std::construct_at(static_cast<U*>(dst), std::move(*static_cast<U*>(src)));
-            },
-            // visit
-            [](void* ptr, void* visitor) -> void*
-            {
-                using Visitor = std::decay_t<decltype(*static_cast<T**>(visitor))>;
-                auto& vis = *static_cast<Visitor*>(visitor);
-                return reinterpret_cast<void*>(vis(*static_cast<U*>(ptr)));
-            },
-            // visit_const
-            [](const void* ptr, void* visitor) -> void*
-            {
-                using Visitor = std::decay_t<decltype(*static_cast<T**>(visitor))>;
-                auto& vis = *static_cast<Visitor*>(visitor);
-                return reinterpret_cast<void*>(vis(*static_cast<const U*>(ptr)));
             }
         };
 

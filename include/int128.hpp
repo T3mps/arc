@@ -287,7 +287,7 @@ namespace arc
         : data_(v) {}
 #else
         : m_lo(static_cast<uint64_t>(v)),
-        m_hi(v < 0 ? (std::numeric_limits<uint64_t>::max)() : 0) {}
+        m_hi(v < 0 ? static_cast<uint64_t>(-1) : 0) {}
 #endif
 
     constexpr uint128::uint128(unsigned int v) noexcept
@@ -302,7 +302,7 @@ namespace arc
         : data_(v) {}
 #else
         : m_lo(static_cast<uint64_t>(v)),
-        m_hi(v < 0 ? (std::numeric_limits<uint64_t>::max)() : 0) {}
+        m_hi(v < 0 ? static_cast<uint64_t>(-1) : 0) {}
 #endif
 
     constexpr uint128::uint128(unsigned long v) noexcept
@@ -317,7 +317,7 @@ namespace arc
         : data_(v) {}
 #else
         : m_lo(static_cast<uint64_t>(v)),
-        m_hi(v < 0 ? (std::numeric_limits<uint64_t>::max)() : 0) {}
+        m_hi(v < 0 ? static_cast<uint64_t>(-1) : 0) {}
 #endif
 
     constexpr uint128::uint128(unsigned long long v) noexcept

@@ -37,12 +37,19 @@ ARC (Advanced Runtime Components) is a cutting-edge C++20 library that brings mo
 #include <arc/arc.hpp>
 
 // Automatic enum reflection
-enum class Status { Success, Failed, Pending };
+enum class Status 
+{ 
+    Success, 
+    Failed, 
+    Pending 
+};
 auto name = arc::enum_to_string(Status::Success);  // "Success"
 
 // Type-safe error handling
-arc::result<int, std::string> divide(int a, int b) {
-    if (b == 0) return arc::err("Division by zero");
+arc::result<int, std::string> divide(int a, int b) 
+{
+    if (b == 0) 
+        return arc::err("Division by zero");
     return a / b;
 }
 
@@ -50,7 +57,13 @@ arc::result<int, std::string> divide(int a, int b) {
 arc::sso24 message = "Hello, World!";  // Stack-allocated
 
 // Type-safe bitfields
-struct PixelTags { struct R{}; struct G{}; struct B{}; struct A{}; };
+struct PixelTags 
+{ 
+    struct R {}; 
+    struct G {}; 
+    struct B {}; 
+    struct A {}; 
+};
 using Pixel = arc::bitfield<
     arc::bit_spec<PixelTags::R, 8>,
     arc::bit_spec<PixelTags::G, 8>,
@@ -69,7 +82,8 @@ Advanced platform and compiler detection with optimization hints.
 arc::cache_aligned<std::atomic<int>> counter;
 
 // Platform-specific optimizations
-if constexpr (arc::platform::has_avx2) {
+if constexpr (arc::platform::has_avx2) 
+{
     // AVX2 optimized path
 }
 ```
@@ -86,7 +100,12 @@ arc::int128 signed_large = -large;
 Automatic enum↔string conversion and flag operations.
 
 ```cpp
-enum class Permission { Read = 1, Write = 2, Execute = 4 };
+enum class Permission 
+{ 
+    Read = 1, 
+    Write = 2, 
+    Execute = 4 
+};
 ARC_FLAGS_ENUM(Permission, 3);
 
 auto perms = Permission::Read | Permission::Write;
@@ -97,7 +116,11 @@ auto names = arc::decompose_flags(perms);  // ["Read", "Write"]
 Tag-based bitfield implementation preventing name collisions.
 
 ```cpp
-struct Tags { struct Field1{}; struct Field2{}; };
+struct Tags 
+{ 
+    struct Field1 {}; 
+    struct Field2 {}; 
+};
 using MyBits = arc::bitfield<
     arc::bit_spec<Tags::Field1, 4>,
     arc::bit_spec<Tags::Field2, 12>
@@ -108,8 +131,10 @@ using MyBits = arc::bitfield<
 Rust-style error handling without exceptions.
 
 ```cpp
-arc::result<std::string, std::errc> read_file(const char* path) {
-    if (auto* f = std::fopen(path, "r")) {
+arc::result<std::string, std::errc> read_file(const char* path) 
+{
+    if (auto* f = std::fopen(path, "r")) 
+    {
         // ... read file ...
         return content;
     }
@@ -139,7 +164,12 @@ Extract type and enum names at compile-time.
 constexpr auto type_name = arc::type_name<std::vector<int>>();
 static_assert(type_name == "std::vector<int>");
 
-enum class Color { Red, Green, Blue };
+enum class Color 
+{ 
+    Red, 
+    Green, 
+    Blue 
+};
 constexpr auto color_name = arc::enum_name<Color, Color::Red>();
 static_assert(color_name == "Red");
 ```
@@ -152,7 +182,8 @@ ARC_ASSERT(ptr != nullptr);
 ARC_ASSERT_IN_RANGE(index, 0, size, "Index {} out of bounds [0, {})", index, size);
 
 // Custom assert handler
-arc::set_assert_handler([](const arc::assert_info& info) {
+arc::set_assert_handler([](const arc::assert_info& info) 
+{
     std::cerr << std::format("Assertion failed: {} at {}:{}\n", 
                             info.expression, info.file, info.line);
 });
@@ -176,14 +207,17 @@ constexpr bool has_float = arc::meta::contains_v<Types, float>;
 ### Error Propagation with Result
 
 ```cpp
-arc::result<Config, std::string> load_config(const std::string& path) {
+arc::result<Config, std::string> load_config(const std::string& path) 
+{
     auto file_result = open_file(path);
-    if (!file_result) {
+    if (!file_result) 
+    {
         return arc::err("Failed to open: " + file_result.error());
     }
     
     auto parse_result = parse_json(file_result.value());
-    if (!parse_result) {
+    if (!parse_result) 
+    {
         return arc::err("Parse error: " + parse_result.error());
     }
     
@@ -199,7 +233,8 @@ auto config = load_config("settings.json")
 ### Custom Enum Ranges
 
 ```cpp
-enum class Temperature : int8_t { 
+enum class Temperature : int8_t 
+{ 
     AbsoluteZero = -273,
     Freezing = 0,
     Boiling = 100 
@@ -209,7 +244,8 @@ enum class Temperature : int8_t {
 ARC_ENUM_RANGE(Temperature, -273, 100);
 
 // Now enum reflection works across the full range
-for (auto [value, name] : arc::enum_entries<Temperature>()) {
+for (auto [value, name] : arc::enum_entries<Temperature>()) 
+{
     std::cout << name << " = " << static_cast<int>(value) << "\n";
 }
 ```
@@ -218,11 +254,12 @@ for (auto [value, name] : arc::enum_entries<Temperature>()) {
 
 ```cpp
 // Network packet header
-struct PacketTags {
-    struct Version{};
-    struct HeaderLength{};
-    struct ServiceType{};
-    struct TotalLength{};
+struct PacketTags 
+{
+    struct Version {};
+    struct HeaderLength {};
+    struct ServiceType {};
+    struct TotalLength {};
 };
 
 using PacketHeader = arc::bitfield<
@@ -232,7 +269,8 @@ using PacketHeader = arc::bitfield<
     arc::bit_spec<PacketTags::TotalLength, 16>
 >;
 
-PacketHeader parse_header(uint32_t raw) {
+PacketHeader parse_header(uint32_t raw) 
+{
     return PacketHeader::from_storage(raw);
 }
 ```
